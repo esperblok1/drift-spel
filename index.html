@@ -87,6 +87,18 @@ canvas{display:block}
 .pause-btns{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
 .pause-btns .btn{font-size:14px;padding:10px 30px;min-width:140px}
 .trk-stat{font-size:11px;color:#888;margin-top:4px;line-height:1.3}
+.garage{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.95);z-index:12;flex-direction:column;align-items:center;justify-content:center;padding:30px}
+.garage h2{font-size:28px;margin-bottom:4px}
+.garage .car-icon{font-size:64px;margin-bottom:10px}
+.garage-section{margin:8px 0;text-align:center}
+.garage-section h3{font-size:14px;color:#888;margin-bottom:6px;letter-spacing:1px}
+.swatch-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:4px}
+.swatch{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.15);cursor:pointer;transition:all .15s}
+.swatch:hover{transform:scale(1.15)}
+.swatch.active{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,0.4)}
+.garage .btn{margin-top:10px;font-size:14px;padding:10px 36px}
+.garage .btn-small{margin:3px}
+.garage .btn-small.active{background:#ff2d55;border-color:#ff2d55;color:#fff}
 </style>
 </head>
 <body>
@@ -106,7 +118,36 @@ canvas{display:block}
       <button class="btn-small selected" id="p1Btn">1</button>
       <button class="btn-small" id="p2Btn">2</button>
     </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn" id="garageBtn1" style="font-size:14px;padding:8px 20px;background:rgba(255,255,255,0.08);background:linear-gradient(135deg,#444,#666)">GARAGE P1 &#x1F3E0;</button>
+      <button class="btn" id="garageBtn2" style="font-size:14px;padding:8px 20px;background:rgba(255,255,255,0.08);background:linear-gradient(135deg,#444,#666);display:none">GARAGE P2 &#x1F3E0;</button>
+    </div>
     <button class="btn" id="startBtn">START</button>
+  </div>
+  <div id="garage" class="garage">
+    <div class="car-icon" id="garageIcon">&#x1F525;</div>
+    <h2 id="garageName">Drift King</h2>
+    <div class="garage-section">
+      <h3>LAK</h3>
+      <div class="swatch-row" id="bodyColors"></div>
+    </div>
+    <div class="garage-section">
+      <h3>VELGEN</h3>
+      <div class="swatch-row" id="wheelColors"></div>
+    </div>
+    <div class="garage-section">
+      <h3>INTERIEUR</h3>
+      <div class="swatch-row" id="interiorColors"></div>
+    </div>
+    <div class="garage-section">
+      <h3>SPOILER</h3>
+      <button class="btn-small" id="spoilerToggle">AAN</button>
+    </div>
+    <div class="garage-section">
+      <h3>NEON</h3>
+      <div class="swatch-row" id="neonColors"></div>
+    </div>
+    <button class="btn" id="garageBackBtn">&#x2190; TERUG</button>
   </div>
   <div id="hudP1" class="hud-half">
     <div class="hud-top">
@@ -224,6 +265,59 @@ var CARS = [
     maxSpeed: 15, accel: 14, turnSpd: 2.2, grip: 0.52, driftPow: 0.0 },
 ];
 
+// ====== CUSTOMIZATION ======
+var CUST_COLORS = [
+  { name: 'Rood', hex: '#ff2d55' },
+  { name: 'Oranje', hex: '#ff6b35' },
+  { name: 'Geel', hex: '#ffdd00' },
+  { name: 'Groen', hex: '#00d4aa' },
+  { name: 'Blauw', hex: '#4a9eff' },
+  { name: 'Paars', hex: '#aa44ff' },
+  { name: 'Wit', hex: '#ffffff' },
+  { name: 'Zwart', hex: '#222222' },
+  { name: 'Zilver', hex: '#cccccc' },
+  { name: 'Bruin', hex: '#885522' },
+  { name: 'Cyaan', hex: '#00ddff' },
+  { name: 'Roze', hex: '#ff66aa' },
+];
+var CUST_WHEEL_COLORS = [
+  { name: 'Zilver', hex: '#888888' },
+  { name: 'Zwart', hex: '#222222' },
+  { name: 'Goud', hex: '#ddaa00' },
+  { name: 'Rood', hex: '#cc2222' },
+];
+var CUST_INT_COLORS = [
+  { name: 'Donker', hex: '#1a1a1a' },
+  { name: 'Beige', hex: '#d4c4a8' },
+  { name: 'Rood', hex: '#882222' },
+  { name: 'Blauw', hex: '#224488' },
+];
+var CUST_NEON_COLORS = [
+  { name: 'Uit', hex: '#000000' },
+  { name: 'Groen', hex: '#00ff88' },
+  { name: 'Blauw', hex: '#00aaff' },
+  { name: 'Paars', hex: '#aa44ff' },
+  { name: 'Rood', hex: '#ff2244' },
+  { name: 'Geel', hex: '#ffdd00' },
+];
+function loadCust(carId) {
+  try { return JSON.parse(localStorage.getItem('driftCust_' + carId)) || {}; } catch(e) { return {}; }
+}
+function saveCust(carId, data) {
+  localStorage.setItem('driftCust_' + carId, JSON.stringify(data));
+}
+function getCust(carId) {
+  var c = loadCust(carId);
+  return {
+    bodyColor: c.bodyColor || null,
+    wheelColor: c.wheelColor || null,
+    interiorColor: c.interiorColor || null,
+    spoiler: c.spoiler !== false,
+    neon: c.neon || false,
+    neonColor: c.neonColor || '#00ff88',
+  };
+}
+
 // ====== INPUT ======
 function Input() {
   this.keys = {};
@@ -255,8 +349,9 @@ Input.prototype = {
 };
 
 // ====== CAR ======
-function Car(data) {
+function Car(data, custom) {
   this.d = data;
+  this.custom = custom || {};
   this.x = 0; this.z = 0;
   this.vx = 0; this.vz = 0;
   this.hdg = 0;
@@ -332,17 +427,19 @@ Car.prototype._wheel = function() {
 Car.prototype._build = function() {
   if (this.d.id === 8) return this._buildTruck();
   var g = new THREE.Group();
-  var col = this.d.color;
+  var c = this.custom;
+  var col = c.bodyColor ? parseInt(c.bodyColor.slice(1), 16) : this.d.color;
+  var wheelCol = c.wheelColor ? parseInt(c.wheelColor.slice(1), 16) : 0xcccccc;
+  var intCol = c.interiorColor ? parseInt(c.interiorColor.slice(1), 16) : 0x1a1a1a;
 
-  // High-quality materials with metallic look
   var bm = new THREE.MeshStandardMaterial({
     color: col, roughness: 0.12, metalness: 0.9, envMapIntensity: 1.2
   });
   var dm = new THREE.MeshStandardMaterial({
-    color: 0x1a1a1a, roughness: 0.9, metalness: 0.1
+    color: intCol, roughness: 0.9, metalness: 0.1
   });
   var cm = new THREE.MeshStandardMaterial({
-    color: 0xcccccc, roughness: 0.08, metalness: 0.95
+    color: wheelCol, roughness: 0.08, metalness: 0.95
   });
   var gm = new THREE.MeshStandardMaterial({
     color: 0x99ccff, roughness: 0.05, metalness: 0.9,
@@ -438,16 +535,18 @@ Car.prototype._build = function() {
     addLayer(swPts, 0.01, gm, 0.26, 0, s * 0.385);
   }
 
-  // REAR WING
-  var wingPts = [
-    [-0.42, -0.07], [-0.42, 0.07], [0.42, 0.07], [0.42, -0.07]
-  ];
-  addLayer(wingPts, 0.02, bm, 0.54, 1.06);
+  // REAR WING (optional)
+  if (c.spoiler !== false) {
+    var wingPts = [
+      [-0.42, -0.07], [-0.42, 0.07], [0.42, 0.07], [0.42, -0.07]
+    ];
+    addLayer(wingPts, 0.02, bm, 0.54, 1.06);
 
-  // Wing pedestals
-  for (var s = -1; s <= 1; s += 2) {
-    var pedPts = [[-0.025, -0.02], [-0.025, 0.10], [0.025, 0.10], [0.025, -0.02]];
-    addLayer(pedPts, 0.42, dm, 0.52, 1.06, s * 0.30);
+    // Wing pedestals
+    for (var s = -1; s <= 1; s += 2) {
+      var pedPts = [[-0.025, -0.02], [-0.025, 0.10], [0.025, 0.10], [0.025, -0.02]];
+      addLayer(pedPts, 0.42, dm, 0.52, 1.06, s * 0.30);
+    }
   }
 
   // DUAL EXHAUST
@@ -472,21 +571,42 @@ Car.prototype._build = function() {
     this.wheels.push(wg);
   }
 
+  // NEON UNDERGLOW
+  if (c.neon && c.neonColor && c.neonColor !== '#000000') {
+    var neonHex = parseInt(c.neonColor.slice(1), 16);
+    var neonM = new THREE.MeshStandardMaterial({
+      color: neonHex, emissive: neonHex, emissiveIntensity: 1.5,
+      transparent: true, opacity: 0.6, roughness: 0.3, metalness: 0.0
+    });
+    var neonG = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.02, 0.50), neonM);
+    neonG.position.set(0, -0.02, 0);
+    g.add(neonG);
+    var neonL = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.02, 0.24), neonM);
+    neonL.position.set(0, -0.02, 0.70);
+    g.add(neonL);
+    var neonR = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.02, 0.24), neonM);
+    neonR.position.set(0, -0.02, -0.70);
+    g.add(neonR);
+  }
+
   return g;
 };
 
 Car.prototype._buildTruck = function() {
   var g = new THREE.Group();
-  var col = this.d.color;
+  var c = this.custom;
+  var col = c.bodyColor ? parseInt(c.bodyColor.slice(1), 16) : this.d.color;
+  var wheelCol = c.wheelColor ? parseInt(c.wheelColor.slice(1), 16) : 0xcccccc;
+  var intCol = c.interiorColor ? parseInt(c.interiorColor.slice(1), 16) : 0x1a1a1a;
   var lift = 0.30;
 
   var bm = new THREE.MeshStandardMaterial({ color: col, roughness: 0.4, metalness: 0.6 });
-  var dm = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9, metalness: 0.1 });
-  var cm = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.08, metalness: 0.95 });
+  var dm = new THREE.MeshStandardMaterial({ color: intCol, roughness: 0.9, metalness: 0.1 });
+  var cm = new THREE.MeshStandardMaterial({ color: wheelCol, roughness: 0.08, metalness: 0.95 });
   var gm = new THREE.MeshStandardMaterial({ color: 0x88bbdd, roughness: 0.05, metalness: 0.3, transparent: true, opacity: 0.3 });
   var hlM = new THREE.MeshStandardMaterial({ color: 0xffffdd, roughness: 0.1, emissive: 0xffffcc, emissiveIntensity: 0.8 });
   var tlM = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.3, emissive: 0xff0000, emissiveIntensity: 0.4 });
-  var chromeM = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.05, metalness: 0.95 });
+  var chromeM = new THREE.MeshStandardMaterial({ color: wheelCol, roughness: 0.05, metalness: 0.95 });
   var grilleM = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5, metalness: 0.3 });
 
   var addLayer = function(pts, dep, mat, y, zOff, xOff) {
@@ -654,6 +774,19 @@ Car.prototype._buildTruck = function() {
     wg.position.set(wps[wi][0], wps[wi][1], wps[wi][2]);
     g.add(wg);
     this.wheels.push(wg);
+  }
+
+  // NEON UNDERGLOW
+  if (c.neon && c.neonColor && c.neonColor !== '#000000') {
+    var neonHex = parseInt(c.neonColor.slice(1), 16);
+    var neonM = new THREE.MeshStandardMaterial({
+      color: neonHex, emissive: neonHex, emissiveIntensity: 1.5,
+      transparent: true, opacity: 0.6, roughness: 0.3, metalness: 0.0
+    });
+    var bLen = 1.56 - (-0.88);
+    var neonG = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.02, bLen * 0.6), neonM);
+    neonG.position.set(0, -0.02, (-0.88 + 1.56) / 2);
+    g.add(neonG);
   }
 
   return g;
@@ -841,6 +974,7 @@ function PoliceCar(x, z, hdg, isTruck) {
       addStripe(0.015, 0.003, 0.035, cmat2, -0.17 + ci * 0.07, 0.147, -0.65);
     }
   }
+
   // === ROOF LIGHT BAR ===
   var spMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
   var lrMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.3 });
@@ -942,6 +1076,8 @@ var TRACKS = [
     gameTime: 120, scoreMode: 'speed' },
   { id: 'offroad', name: 'Offroad', desc: 'Offroad race door het bos', icon: '\u{1F332}',
     gameTime: 120, scoreMode: 'speed' },
+  { id: 'timeattack', name: 'Time Attack', desc: '30s — zo ver mogelijk!', icon: '\u23F1\uFE0F',
+    gameTime: 30, scoreMode: 'distance' },
 ];
 var selectedTrack = 'circuit';
 
@@ -958,7 +1094,7 @@ Track.prototype._build = function(scene) {
   if (this.type === 'drag') this._buildDrag(scene);
   else if (this.type === 'urban') this._buildUrban(scene);
   else if (this.type === 'offroad') this._buildOffroad(scene);
-  else this._buildCircuit(scene);
+  else this._buildCircuit(scene); // circuit and timeattack share layout
 };
 
 // Shared material helpers
@@ -2178,6 +2314,86 @@ renderMenu();
 p1Btn.addEventListener('click', function() { playerCount = 1; renderMenu(); });
 p2Btn.addEventListener('click', function() { playerCount = 2; renderMenu(); });
 
+var garagePlayer = 0;
+function renderGarage(pIdx) {
+  garagePlayer = pIdx || 0;
+  var ci = selectedCars[garagePlayer];
+  var car = CARS[ci];
+  var cust = getCust(ci);
+  document.getElementById('garageIcon').textContent = car.icon;
+  document.getElementById('garageName').textContent = car.name + ' (P' + (garagePlayer + 1) + ')';
+
+  function makeSwatch(containerId, colors, currentHex, onChange) {
+    var cont = document.getElementById(containerId);
+    cont.innerHTML = '';
+    for (var i = 0; i < colors.length; i++) {
+      var sw = document.createElement('div');
+      sw.className = 'swatch' + (colors[i].hex === currentHex ? ' active' : '');
+      sw.style.background = colors[i].hex;
+      if (colors[i].hex === '#000000') sw.style.border = '2px solid #555';
+      (function(idx) {
+        sw.addEventListener('click', function() {
+          onChange(colors[idx].hex);
+          renderGarage(garagePlayer);
+        });
+      })(i);
+      cont.appendChild(sw);
+    }
+  }
+
+  makeSwatch('bodyColors', CUST_COLORS, cust.bodyColor || '#' + car.color.toString(16).padStart(6, '0'), function(hex) {
+    var d = loadCust(ci); d.bodyColor = hex; saveCust(ci, d);
+  });
+  makeSwatch('wheelColors', CUST_WHEEL_COLORS, cust.wheelColor || '#888888', function(hex) {
+    var d = loadCust(ci); d.wheelColor = hex; saveCust(ci, d);
+  });
+  makeSwatch('interiorColors', CUST_INT_COLORS, cust.interiorColor || '#1a1a1a', function(hex) {
+    var d = loadCust(ci); d.interiorColor = hex; saveCust(ci, d);
+  });
+
+  var spBtn = document.getElementById('spoilerToggle');
+  spBtn.textContent = cust.spoiler !== false ? 'AAN' : 'UIT';
+  spBtn.className = 'btn-small' + (cust.spoiler !== false ? ' active' : '');
+  spBtn.onclick = function() {
+    var d = loadCust(ci); d.spoiler = d.spoiler === false ? true : false; saveCust(ci, d);
+    renderGarage(garagePlayer);
+  };
+
+  makeSwatch('neonColors', CUST_NEON_COLORS, cust.neon && cust.neonColor ? cust.neonColor : '#000000', function(hex) {
+    var d = loadCust(ci);
+    if (hex === '#000000') { d.neon = false; d.neonColor = null; }
+    else { d.neon = true; d.neonColor = hex; }
+    saveCust(ci, d);
+    renderGarage(garagePlayer);
+  });
+}
+
+// Garage buttons
+document.getElementById('garageBtn1').addEventListener('click', function() {
+  garagePlayer = 0;
+  menu.style.display = 'none';
+  document.getElementById('garage').style.display = 'flex';
+  renderGarage(0);
+});
+document.getElementById('garageBtn2').addEventListener('click', function() {
+  garagePlayer = 1;
+  menu.style.display = 'none';
+  document.getElementById('garage').style.display = 'flex';
+  renderGarage(1);
+});
+document.getElementById('garageBackBtn').addEventListener('click', function() {
+  document.getElementById('garage').style.display = 'none';
+  menu.style.display = 'flex';
+});
+
+// Show/hide P2 garage button based on player count
+function updGarageBtns() {
+  document.getElementById('garageBtn2').style.display = playerCount === 2 ? 'block' : 'none';
+}
+// Override renderMenu to also update garage buttons
+var _origRenderMenu = renderMenu;
+renderMenu = function() { _origRenderMenu(); updGarageBtns(); };
+
 function showMenu() {
   menu.style.display = 'flex'; hudP1.style.display = 'none'; hudP2.style.display = 'none';
   gameOver.style.display = 'none'; countdown.style.display = 'none';
@@ -2484,7 +2700,8 @@ function startGame() {
   }
 
   for (var pi = 0; pi < pc; pi++) {
-    var c = new Car(carData[pi]);
+    var cust = getCust(selectedCars[pi]);
+    var c = new Car(carData[pi], cust);
     var off = pi * 1.6 - 0.8;
     c.reset(start.x + Math.cos(start.hdg) * off,
              start.z + Math.sin(start.hdg) * off,
@@ -2761,6 +2978,7 @@ function endGame() {
     if (TRACKS[i].id === selectedTrack) { trackData = TRACKS[i]; break; }
   }
   var isSpeed = trackData && trackData.scoreMode === 'speed';
+  var isDistance = trackData && trackData.scoreMode === 'distance';
   var isSurvival = track && track.type === 'urban';
   var carNames = [];
   var anyWon = false;
@@ -2798,6 +3016,21 @@ function endGame() {
         (isSurvival ? '<br>Drift: ' + totalDriftTimes[pi].toFixed(1) + 's' : '') +
         (won ? '</span>' : '')
       );
+    } else if (isDistance) {
+      var distScore = totalDistances[pi] / 10;
+      var distWon = pi === 0 ? (distScore >= (cars.length > 1 ? totalDistances[1] / 10 : 0)) : (distScore > (totalDistances[0] / 10));
+      if (cars.length === 1) distWon = true;
+      wonFlags[pi] = distWon;
+      if (distWon) anyWon = true;
+      scores[pi] = Math.round(distScore);
+      stats.push(
+        (distWon ? '<span style="color:#ffd700">' : '') +
+        (distWon ? 'WINNAAR' : 'Verloren') + '<br>' +
+        'Afstand: ' + distScore.toFixed(0) + 'm<br>' +
+        'Topsnelheid: ' + Math.round(topSpeeds[pi] * 3.6) + ' km/h' +
+        '<br>Drift: ' + totalDriftTimes[pi].toFixed(1) + 's' +
+        (distWon ? '</span>' : '')
+      );
     } else {
       stats.push(
         'Drift: ' + totalDriftTimes[pi].toFixed(1) + 's<br>' +
@@ -2806,7 +3039,7 @@ function endGame() {
       );
     }
   }
-  goTitle.textContent = anyWon ? (isSurvival ? 'OVERLEEFD!' : 'WINNAAR!') : 'GAME OVER';
+  goTitle.textContent = anyWon ? (isSurvival ? 'OVERLEEFD!' : (isDistance ? 'TIJD OM!' : 'WINNAAR!')) : 'GAME OVER';
   for (var si = 0; si < cars.length; si++) {
     recStat(selectedCars[si], selectedTrack, wonFlags[si], finishTimes[si]);
   }
