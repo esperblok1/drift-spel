@@ -208,23 +208,23 @@ canvas{display:block}
 // ====== CAR DATA ======
 var CARS = [
   { id: 0, name: 'Drift King', desc: 'Meesterschap in driften', color: 0xff2d55, icon: '\u{1F525}',
-    maxSpeed: 24, accel: 16, turnSpd: 2.8, grip: 0.12, driftPow: 1.0 },
+    maxSpeed: 24, accel: 16, turnSpd: 2.8, grip: 0.12, driftPow: 1.0, weight: 1200 },
   { id: 1, name: 'Speed Demon', desc: 'Razendsnel maar glad', color: 0xff6b35, icon: '\u26A1',
-    maxSpeed: 30, accel: 22, turnSpd: 2.4, grip: 0.08, driftPow: 0.85 },
+    maxSpeed: 30, accel: 22, turnSpd: 2.4, grip: 0.08, driftPow: 0.85, weight: 1100 },
   { id: 2, name: 'Allrounder', desc: 'Gebalanceerd en stabiel', color: 0x00d4aa, icon: '\u{1F530}',
-    maxSpeed: 26, accel: 18, turnSpd: 2.6, grip: 0.22, driftPow: 0.6 },
+    maxSpeed: 26, accel: 18, turnSpd: 2.6, grip: 0.22, driftPow: 0.6, weight: 1300 },
   { id: 3, name: 'Grip Master', desc: 'Vastberaden en veilig', color: 0x4a9eff, icon: '\u{1F6E1}\uFE0F',
-    maxSpeed: 22, accel: 15, turnSpd: 3.0, grip: 0.38, driftPow: 0.4 },
+    maxSpeed: 22, accel: 15, turnSpd: 3.0, grip: 0.38, driftPow: 0.4, weight: 1400 },
   { id: 4, name: 'Tank', desc: 'Lomp en zwaar — onstuitbaar', color: 0x885522, icon: '\u{1F5FB}',
-    maxSpeed: 20, accel: 12, turnSpd: 2.0, grip: 0.45, driftPow: 0.2 },
+    maxSpeed: 20, accel: 12, turnSpd: 2.0, grip: 0.45, driftPow: 0.2, weight: 1800 },
   { id: 5, name: 'Rocket', desc: 'Gekke acceleratie, slecht sturen', color: 0xffdd00, icon: '\u{1F680}',
-    maxSpeed: 32, accel: 28, turnSpd: 1.8, grip: 0.06, driftPow: 0.7 },
+    maxSpeed: 32, accel: 28, turnSpd: 1.8, grip: 0.06, driftPow: 0.7, weight: 1000 },
   { id: 6, name: 'Drift Pro', desc: 'Pure drift — nul grip', color: 0xff8800, icon: '\u{1F4A8}',
-    maxSpeed: 22, accel: 14, turnSpd: 3.2, grip: 0.04, driftPow: 1.4 },
+    maxSpeed: 22, accel: 14, turnSpd: 3.2, grip: 0.04, driftPow: 1.4, weight: 1150 },
   { id: 7, name: 'Tuner', desc: 'Licht en wendbaar', color: 0xaa44ff, icon: '\u{1F3CE}\uFE0F',
-    maxSpeed: 27, accel: 20, turnSpd: 3.4, grip: 0.18, driftPow: 0.8 },
+    maxSpeed: 27, accel: 20, turnSpd: 3.4, grip: 0.18, driftPow: 0.8, weight: 900 },
   { id: 8, name: 'Offroad', desc: 'Dodge Ram — volle grip, lage snelheid', color: 0xcc3333, icon: '\u{1F3D2}\uFE0F',
-    maxSpeed: 15, accel: 14, turnSpd: 2.2, grip: 0.52, driftPow: 0.0 },
+    maxSpeed: 15, accel: 14, turnSpd: 2.2, grip: 0.52, driftPow: 0.0, weight: 2200 },
 ];
 
 
@@ -260,6 +260,8 @@ Input.prototype = {
 };
 
 // ====== CAR ======
+var REF_WEIGHT = 1200;
+
 function Car(data) {
   this.d = data;
   this.x = 0; this.z = 0;
@@ -701,12 +703,14 @@ Car.prototype.update = function(dt, input) {
   var fwd = this._fwdDir();
   var fx = fwd.x, fz = fwd.z;
 
+  var wScale = REF_WEIGHT / (this.d.weight || REF_WEIGHT);
+
   if (input.getUp()) {
-    this.vx += fx * this.d.accel * dt;
-    this.vz += fz * this.d.accel * dt;
+    this.vx += fx * this.d.accel * wScale * dt;
+    this.vz += fz * this.d.accel * wScale * dt;
   }
   if (input.getDown()) {
-    var bf = this.d.accel * 0.65;
+    var bf = this.d.accel * 0.65 * wScale;
     this.vx -= fx * bf * dt;
     this.vz -= fz * bf * dt;
   }
@@ -790,6 +794,7 @@ function PoliceCar(x, z, hdg, isTruck) {
   this.maxSpd = 30;
   this.turnSpd = 2.8;
   this.grip = 0.7;
+  this.weight = isTruck ? 2200 : 1200;
   this.lightTimer = 0;
   this._fwd = new THREE.Vector3();
   this._yAx = new THREE.Vector3(0, 1, 0);
@@ -817,8 +822,8 @@ function PoliceCar(x, z, hdg, isTruck) {
 
   // Use real player car model via Car class
   var carData = isTruck
-    ? { id: 8, color: 0xffffff, accel: 14, maxSpd: 15, turnSpd: 2.2, grip: 0.52, name: '', icon: '' }
-    : { color: 0xffffff, accel: 22, maxSpd: 30, turnSpd: 2.8, grip: 0.7, name: '', icon: '' };
+    ? { id: 8, color: 0xffffff, accel: 14, maxSpd: 15, turnSpd: 2.2, grip: 0.52, name: '', icon: '', weight: 2200 }
+    : { color: 0xffffff, accel: 22, maxSpd: 30, turnSpd: 2.8, grip: 0.7, name: '', icon: '', weight: 1200 };
   var tempCar = new Car(carData);
   var body = tempCar.mesh;
   // Make police car body matte (no envMap so metalness looks black)
@@ -925,7 +930,7 @@ PoliceCar.prototype.update = function(dt, players) {
   if (bestD > 64 && Math.abs(diff) > 1.2 && spd > 8) gas = 0.6;
   var fwd = this._fwdDir();
   var fx = fwd.x, fz = fwd.z;
-  if (gas > 0.05) { this.vx += fx * this.accel * dt * gas; this.vz += fz * this.accel * dt * gas; }
+  if (gas > 0.05) { this.vx += fx * this.accel * (REF_WEIGHT / this.weight) * dt * gas; this.vz += fz * this.accel * (REF_WEIGHT / this.weight) * dt * gas; }
   var drag = Math.pow(0.98, dt * 60);
   this.vx *= drag; this.vz *= drag;
   spd = Math.sqrt(this.vx * this.vx + this.vz * this.vz);
@@ -1861,10 +1866,10 @@ Track.prototype._buildUrban = function(scene) {
       var col2 = isTruck ? truckColors2[truckCount] : carColors2[Math.floor(Math.random() * carColors2.length)];
       var pCar;
       if (isTruck) {
-        pCar = new Car({ id: 8, color: col2, accel: 14, maxSpd: 15, turnSpd: 2.2, grip: 0.52, name: '', icon: '' });
+        pCar = new Car({ id: 8, color: col2, accel: 14, maxSpd: 15, turnSpd: 2.2, grip: 0.52, name: '', icon: '', weight: 2200 });
         truckCount++;
       } else {
-        pCar = new Car({ color: col2, accel: 20, maxSpd: 25, turnSpd: 2.5, grip: 0.6, name: '', icon: '' });
+        pCar = new Car({ color: col2, accel: 20, maxSpd: 25, turnSpd: 2.5, grip: 0.6, name: '', icon: '', weight: 1300 });
       }
       pCar.mesh.position.set(cx2, 0, cz2);
       var hdg2 = side2 > 0 ? Math.PI / 2 : -Math.PI / 2;
