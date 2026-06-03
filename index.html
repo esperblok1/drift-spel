@@ -2228,7 +2228,8 @@ function renderCarGrid(container, selIdx, onClick) {
       '<div class="car-desc">' + c.desc + '</div>' +
       '<div class="stat-bar">Snelheid <span class="stat-fill"><span style="width:' + ((c.maxSpeed / 30) * 100) + '%;background:' + cs + '"></span></span></div>' +
       '<div class="stat-bar">Drift <span class="stat-fill"><span style="width:' + ((1 - c.grip) * 110) + '%;background:#ff6b35"></span></span></div>' +
-      '<div class="stat-bar">Grip <span class="stat-fill"><span style="width:' + (c.grip * 250) + '%;background:#4a9eff"></span></span></div>';
+      '<div class="stat-bar">Grip <span class="stat-fill"><span style="width:' + (c.grip * 250) + '%;background:#4a9eff"></span></span></div>' +
+      '<div class="stat-bar">Gewicht <span class="stat-fill"><span style="width:' + ((c.weight / 2200) * 100) + '%;background:#888"></span></span></div>';
     (function(idx) {
       card.addEventListener('click', function() { onClick(idx); });
     })(i);
