@@ -87,18 +87,7 @@ canvas{display:block}
 .pause-btns{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
 .pause-btns .btn{font-size:14px;padding:10px 30px;min-width:140px}
 .trk-stat{font-size:11px;color:#888;margin-top:4px;line-height:1.3}
-.garage{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.95);z-index:12;flex-direction:column;align-items:center;justify-content:center;padding:30px}
-.garage h2{font-size:28px;margin-bottom:4px}
-.garage .car-icon{font-size:64px;margin-bottom:10px}
-.garage-section{margin:8px 0;text-align:center}
-.garage-section h3{font-size:14px;color:#888;margin-bottom:6px;letter-spacing:1px}
-.swatch-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:4px}
-.swatch{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.15);cursor:pointer;transition:all .15s}
-.swatch:hover{transform:scale(1.15)}
-.swatch.active{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,0.4)}
-.garage .btn{margin-top:10px;font-size:14px;padding:10px 36px}
-.garage .btn-small{margin:3px}
-.garage .btn-small.active{background:#ff2d55;border-color:#ff2d55;color:#fff}
+
 </style>
 </head>
 <body>
@@ -118,37 +107,10 @@ canvas{display:block}
       <button class="btn-small selected" id="p1Btn">1</button>
       <button class="btn-small" id="p2Btn">2</button>
     </div>
-    <div style="display:flex;gap:10px;margin-top:8px">
-      <button class="btn" id="garageBtn1" style="font-size:14px;padding:8px 20px;background:rgba(255,255,255,0.08);background:linear-gradient(135deg,#444,#666)">GARAGE P1 &#x1F3E0;</button>
-      <button class="btn" id="garageBtn2" style="font-size:14px;padding:8px 20px;background:rgba(255,255,255,0.08);background:linear-gradient(135deg,#444,#666);display:none">GARAGE P2 &#x1F3E0;</button>
-    </div>
+
     <button class="btn" id="startBtn">START</button>
   </div>
-  <div id="garage" class="garage">
-    <div class="car-icon" id="garageIcon">&#x1F525;</div>
-    <h2 id="garageName">Drift King</h2>
-    <div class="garage-section">
-      <h3>LAK</h3>
-      <div class="swatch-row" id="bodyColors"></div>
-    </div>
-    <div class="garage-section">
-      <h3>VELGEN</h3>
-      <div class="swatch-row" id="wheelColors"></div>
-    </div>
-    <div class="garage-section">
-      <h3>INTERIEUR</h3>
-      <div class="swatch-row" id="interiorColors"></div>
-    </div>
-    <div class="garage-section">
-      <h3>SPOILER</h3>
-      <button class="btn-small" id="spoilerToggle">AAN</button>
-    </div>
-    <div class="garage-section">
-      <h3>NEON</h3>
-      <div class="swatch-row" id="neonColors"></div>
-    </div>
-    <button class="btn" id="garageBackBtn">&#x2190; TERUG</button>
-  </div>
+
   <div id="hudP1" class="hud-half">
     <div class="hud-top">
       <div class="hud-item"><div class="label">P1 Snelheid</div><div class="value" id="p1Speed">0</div></div>
@@ -265,58 +227,7 @@ var CARS = [
     maxSpeed: 15, accel: 14, turnSpd: 2.2, grip: 0.52, driftPow: 0.0 },
 ];
 
-// ====== CUSTOMIZATION ======
-var CUST_COLORS = [
-  { name: 'Rood', hex: '#ff2d55' },
-  { name: 'Oranje', hex: '#ff6b35' },
-  { name: 'Geel', hex: '#ffdd00' },
-  { name: 'Groen', hex: '#00d4aa' },
-  { name: 'Blauw', hex: '#4a9eff' },
-  { name: 'Paars', hex: '#aa44ff' },
-  { name: 'Wit', hex: '#ffffff' },
-  { name: 'Zwart', hex: '#222222' },
-  { name: 'Zilver', hex: '#cccccc' },
-  { name: 'Bruin', hex: '#885522' },
-  { name: 'Cyaan', hex: '#00ddff' },
-  { name: 'Roze', hex: '#ff66aa' },
-];
-var CUST_WHEEL_COLORS = [
-  { name: 'Zilver', hex: '#888888' },
-  { name: 'Zwart', hex: '#222222' },
-  { name: 'Goud', hex: '#ddaa00' },
-  { name: 'Rood', hex: '#cc2222' },
-];
-var CUST_INT_COLORS = [
-  { name: 'Donker', hex: '#1a1a1a' },
-  { name: 'Beige', hex: '#d4c4a8' },
-  { name: 'Rood', hex: '#882222' },
-  { name: 'Blauw', hex: '#224488' },
-];
-var CUST_NEON_COLORS = [
-  { name: 'Uit', hex: '#000000' },
-  { name: 'Groen', hex: '#00ff88' },
-  { name: 'Blauw', hex: '#00aaff' },
-  { name: 'Paars', hex: '#aa44ff' },
-  { name: 'Rood', hex: '#ff2244' },
-  { name: 'Geel', hex: '#ffdd00' },
-];
-function loadCust(carId) {
-  try { return JSON.parse(localStorage.getItem('driftCust_' + carId)) || {}; } catch(e) { return {}; }
-}
-function saveCust(carId, data) {
-  localStorage.setItem('driftCust_' + carId, JSON.stringify(data));
-}
-function getCust(carId) {
-  var c = loadCust(carId);
-  return {
-    bodyColor: c.bodyColor || null,
-    wheelColor: c.wheelColor || null,
-    interiorColor: c.interiorColor || null,
-    spoiler: c.spoiler !== false,
-    neon: c.neon || false,
-    neonColor: c.neonColor || '#00ff88',
-  };
-}
+
 
 // ====== INPUT ======
 function Input() {
@@ -349,9 +260,8 @@ Input.prototype = {
 };
 
 // ====== CAR ======
-function Car(data, custom) {
+function Car(data) {
   this.d = data;
-  this.custom = custom || {};
   this.x = 0; this.z = 0;
   this.vx = 0; this.vz = 0;
   this.hdg = 0;
@@ -427,10 +337,9 @@ Car.prototype._wheel = function() {
 Car.prototype._build = function() {
   if (this.d.id === 8) return this._buildTruck();
   var g = new THREE.Group();
-  var c = this.custom;
-  var col = c.bodyColor ? parseInt(c.bodyColor.slice(1), 16) : this.d.color;
-  var wheelCol = c.wheelColor ? parseInt(c.wheelColor.slice(1), 16) : 0xcccccc;
-  var intCol = c.interiorColor ? parseInt(c.interiorColor.slice(1), 16) : 0x1a1a1a;
+  var col = this.d.color;
+  var wheelCol = 0xcccccc;
+  var intCol = 0x1a1a1a;
 
   var bm = new THREE.MeshStandardMaterial({
     color: col, roughness: 0.12, metalness: 0.9, envMapIntensity: 1.2
@@ -535,33 +444,28 @@ Car.prototype._build = function() {
     addLayer(swPts, 0.01, gm, 0.26, 0, s * 0.385);
   }
 
-  // REAR WING (optional) — improved aero design
-  if (c.spoiler !== false) {
-    // Main wing: aerodynamic profile (teardrop cross-section)
-    var wingPts = [
-      [-0.38, -0.05],  // left trailing edge
-      [-0.34, 0.01],   // left mid
-      [-0.26, 0.05],   // left thick
-      [-0.14, 0.07],   // left leading curve
-      [0, 0.08],       // center leading edge
-      [0.14, 0.07],    // right leading curve
-      [0.26, 0.05],    // right thick
-      [0.34, 0.01],    // right mid
-      [0.38, -0.05],   // right trailing edge
-    ];
-    addLayer(wingPts, 0.05, bm, 0.54, 1.08);
+  // REAR WING
+  var wingPts = [
+    [-0.38, -0.05],
+    [-0.34, 0.01],
+    [-0.26, 0.05],
+    [-0.14, 0.07],
+    [0, 0.08],
+    [0.14, 0.07],
+    [0.26, 0.05],
+    [0.34, 0.01],
+    [0.38, -0.05],
+  ];
+  addLayer(wingPts, 0.05, bm, 0.54, 1.08);
 
-    // End plates
-    for (var s = -1; s <= 1; s += 2) {
-      var epPts = [[-0.004, -0.05], [-0.004, 0.08], [0.004, 0.08], [0.004, -0.05]];
-      addLayer(epPts, 0.06, bm, 0.48, 1.08, s * 0.38);
-    }
+  for (var s = -1; s <= 1; s += 2) {
+    var epPts = [[-0.004, -0.05], [-0.004, 0.08], [0.004, 0.08], [0.004, -0.05]];
+    addLayer(epPts, 0.06, bm, 0.48, 1.08, s * 0.38);
+  }
 
-    // Wing pedestals (wider stance)
-    for (var s = -1; s <= 1; s += 2) {
-      var pedPts = [[-0.03, -0.02], [-0.03, 0.12], [0.03, 0.12], [0.03, -0.02]];
-      addLayer(pedPts, 0.40, dm, 0.52, 1.08, s * 0.24);
-    }
+  for (var s = -1; s <= 1; s += 2) {
+    var pedPts = [[-0.03, -0.02], [-0.03, 0.12], [0.03, 0.12], [0.03, -0.02]];
+    addLayer(pedPts, 0.40, dm, 0.52, 1.08, s * 0.24);
   }
 
   // DUAL EXHAUST
@@ -586,33 +490,14 @@ Car.prototype._build = function() {
     this.wheels.push(wg);
   }
 
-  // NEON UNDERGLOW
-  if (c.neon && c.neonColor && c.neonColor !== '#000000') {
-    var neonHex = parseInt(c.neonColor.slice(1), 16);
-    var neonM = new THREE.MeshStandardMaterial({
-      color: neonHex, emissive: neonHex, emissiveIntensity: 1.5,
-      transparent: true, opacity: 0.6, roughness: 0.3, metalness: 0.0
-    });
-    var neonG = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.02, 0.50), neonM);
-    neonG.position.set(0, -0.02, 0);
-    g.add(neonG);
-    var neonL = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.02, 0.24), neonM);
-    neonL.position.set(0, -0.02, 0.70);
-    g.add(neonL);
-    var neonR = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.02, 0.24), neonM);
-    neonR.position.set(0, -0.02, -0.70);
-    g.add(neonR);
-  }
-
   return g;
 };
 
 Car.prototype._buildTruck = function() {
   var g = new THREE.Group();
-  var c = this.custom;
-  var col = c.bodyColor ? parseInt(c.bodyColor.slice(1), 16) : this.d.color;
-  var wheelCol = c.wheelColor ? parseInt(c.wheelColor.slice(1), 16) : 0xcccccc;
-  var intCol = c.interiorColor ? parseInt(c.interiorColor.slice(1), 16) : 0x1a1a1a;
+  var col = this.d.color;
+  var wheelCol = 0xcccccc;
+  var intCol = 0x1a1a1a;
   var lift = 0.30;
 
   var bm = new THREE.MeshStandardMaterial({ color: col, roughness: 0.4, metalness: 0.6 });
@@ -789,19 +674,6 @@ Car.prototype._buildTruck = function() {
     wg.position.set(wps[wi][0], wps[wi][1], wps[wi][2]);
     g.add(wg);
     this.wheels.push(wg);
-  }
-
-  // NEON UNDERGLOW
-  if (c.neon && c.neonColor && c.neonColor !== '#000000') {
-    var neonHex = parseInt(c.neonColor.slice(1), 16);
-    var neonM = new THREE.MeshStandardMaterial({
-      color: neonHex, emissive: neonHex, emissiveIntensity: 1.5,
-      transparent: true, opacity: 0.6, roughness: 0.3, metalness: 0.0
-    });
-    var bLen = 1.56 - (-0.88);
-    var neonG = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.02, bLen * 0.6), neonM);
-    neonG.position.set(0, -0.02, (-0.88 + 1.56) / 2);
-    g.add(neonG);
   }
 
   return g;
@@ -2410,85 +2282,7 @@ renderMenu();
 p1Btn.addEventListener('click', function() { playerCount = 1; renderMenu(); });
 p2Btn.addEventListener('click', function() { playerCount = 2; renderMenu(); });
 
-var garagePlayer = 0;
-function renderGarage(pIdx) {
-  garagePlayer = pIdx || 0;
-  var ci = selectedCars[garagePlayer];
-  var car = CARS[ci];
-  var cust = getCust(ci);
-  document.getElementById('garageIcon').textContent = car.icon;
-  document.getElementById('garageName').textContent = car.name + ' (P' + (garagePlayer + 1) + ')';
 
-  function makeSwatch(containerId, colors, currentHex, onChange) {
-    var cont = document.getElementById(containerId);
-    cont.innerHTML = '';
-    for (var i = 0; i < colors.length; i++) {
-      var sw = document.createElement('div');
-      sw.className = 'swatch' + (colors[i].hex === currentHex ? ' active' : '');
-      sw.style.background = colors[i].hex;
-      if (colors[i].hex === '#000000') sw.style.border = '2px solid #555';
-      (function(idx) {
-        sw.addEventListener('click', function() {
-          onChange(colors[idx].hex);
-          renderGarage(garagePlayer);
-        });
-      })(i);
-      cont.appendChild(sw);
-    }
-  }
-
-  makeSwatch('bodyColors', CUST_COLORS, cust.bodyColor || '#' + car.color.toString(16).padStart(6, '0'), function(hex) {
-    var d = loadCust(ci); d.bodyColor = hex; saveCust(ci, d);
-  });
-  makeSwatch('wheelColors', CUST_WHEEL_COLORS, cust.wheelColor || '#888888', function(hex) {
-    var d = loadCust(ci); d.wheelColor = hex; saveCust(ci, d);
-  });
-  makeSwatch('interiorColors', CUST_INT_COLORS, cust.interiorColor || '#1a1a1a', function(hex) {
-    var d = loadCust(ci); d.interiorColor = hex; saveCust(ci, d);
-  });
-
-  var spBtn = document.getElementById('spoilerToggle');
-  spBtn.textContent = cust.spoiler !== false ? 'AAN' : 'UIT';
-  spBtn.className = 'btn-small' + (cust.spoiler !== false ? ' active' : '');
-  spBtn.onclick = function() {
-    var d = loadCust(ci); d.spoiler = d.spoiler === false ? true : false; saveCust(ci, d);
-    renderGarage(garagePlayer);
-  };
-
-  makeSwatch('neonColors', CUST_NEON_COLORS, cust.neon && cust.neonColor ? cust.neonColor : '#000000', function(hex) {
-    var d = loadCust(ci);
-    if (hex === '#000000') { d.neon = false; d.neonColor = null; }
-    else { d.neon = true; d.neonColor = hex; }
-    saveCust(ci, d);
-    renderGarage(garagePlayer);
-  });
-}
-
-// Garage buttons
-document.getElementById('garageBtn1').addEventListener('click', function() {
-  garagePlayer = 0;
-  menu.style.display = 'none';
-  document.getElementById('garage').style.display = 'flex';
-  renderGarage(0);
-});
-document.getElementById('garageBtn2').addEventListener('click', function() {
-  garagePlayer = 1;
-  menu.style.display = 'none';
-  document.getElementById('garage').style.display = 'flex';
-  renderGarage(1);
-});
-document.getElementById('garageBackBtn').addEventListener('click', function() {
-  document.getElementById('garage').style.display = 'none';
-  menu.style.display = 'flex';
-});
-
-// Show/hide P2 garage button based on player count
-function updGarageBtns() {
-  document.getElementById('garageBtn2').style.display = playerCount === 2 ? 'block' : 'none';
-}
-// Override renderMenu to also update garage buttons
-var _origRenderMenu = renderMenu;
-renderMenu = function() { _origRenderMenu(); updGarageBtns(); };
 
 function showMenu() {
   menu.style.display = 'flex'; hudP1.style.display = 'none'; hudP2.style.display = 'none';
@@ -2797,8 +2591,7 @@ function startGame() {
   }
 
   for (var pi = 0; pi < pc; pi++) {
-    var cust = getCust(selectedCars[pi]);
-    var c = new Car(carData[pi], cust);
+    var c = new Car(carData[pi]);
     var off = pi * 1.6 - 0.8;
     c.reset(start.x + Math.cos(start.hdg) * off,
              start.z + Math.sin(start.hdg) * off,
