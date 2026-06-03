@@ -1094,7 +1094,8 @@ Track.prototype._build = function(scene) {
   if (this.type === 'drag') this._buildDrag(scene);
   else if (this.type === 'urban') this._buildUrban(scene);
   else if (this.type === 'offroad') this._buildOffroad(scene);
-  else this._buildCircuit(scene); // circuit and timeattack share layout
+  else if (this.type === 'timeattack') this._buildTimeAttack(scene);
+  else this._buildCircuit(scene);
 };
 
 // Shared material helpers
@@ -1640,6 +1641,84 @@ Track.prototype._getDragPos = function() {
   return { x: 0, z: -47, hdg: Math.PI };
 };
 
+// ====== TIME ATTACK (infinite straight) ======
+Track.prototype._buildTimeAttack = function(scene) {
+  this.halfW = 3.0;
+  var roadLen = 2000;
+
+  // Grass
+  var grass = new THREE.Mesh(new THREE.PlaneGeometry(80, roadLen + 200), this._grassMat());
+  grass.rotation.x = -Math.PI / 2; grass.position.y = -0.05; grass.receiveShadow = true;
+  this.group.add(grass);
+
+  // Road
+  var road = new THREE.Mesh(new THREE.PlaneGeometry(this.halfW * 2, roadLen),
+    new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.9 }));
+  road.rotation.x = -Math.PI / 2; road.position.set(0, 0, 0); road.receiveShadow = true;
+  this.group.add(road);
+
+  // Center dashed line
+  var lm = this._lineMat();
+  for (var i = -990; i < 990; i += 1.5) {
+    var dash = new THREE.Mesh(new THREE.PlaneGeometry(0.04, 0.8), lm);
+    dash.position.set(0, 0.01, i); dash.rotation.x = -Math.PI / 2; this.group.add(dash);
+  }
+
+  // Edge lines
+  var el = new THREE.Mesh(new THREE.PlaneGeometry(0.04, roadLen), lm);
+  el.position.set(this.halfW - 0.1, 0.01, 0); el.rotation.x = -Math.PI / 2; this.group.add(el);
+  var er = new THREE.Mesh(new THREE.PlaneGeometry(0.04, roadLen), lm);
+  er.position.set(-this.halfW + 0.1, 0.01, 0); er.rotation.x = -Math.PI / 2; this.group.add(er);
+
+  // Barriers 2m from road edge, full length
+  var bm = this._barrierMat();
+  var barrierH = 0.4;
+  for (var side = -1; side <= 1; side += 2) {
+    var wall = new THREE.Mesh(new THREE.BoxGeometry(0.15, barrierH, roadLen), bm);
+    wall.position.set(side * (this.halfW + 2.0), barrierH / 2, 0);
+    wall.castShadow = true; this.group.add(wall);
+  }
+
+  // Start line
+  var startMats = [
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 }),
+    new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3 }),
+  ];
+  for (var si = -1; si <= 1; si += 2) {
+    var sq = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.3), startMats[si > 0 ? 0 : 1]);
+    sq.position.set(si * 0.3, 0.02, -990); sq.rotation.x = -Math.PI / 2; this.group.add(sq);
+  }
+
+  // Distance markers (orange signs with cones every 50m)
+  var markerMat = new THREE.MeshStandardMaterial({ color: 0xff6600, roughness: 0.5 });
+  for (var mi = 0; mi < 38; mi++) {
+    var mz = -950 + (mi + 1) * 50;
+    var sign = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.04), markerMat);
+    sign.position.set(this.halfW + 1.0, 0.4, mz);
+    this.group.add(sign);
+    for (var side = -1; side <= 1; side += 2) {
+      var cone = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.08, 0.2, 6),
+        new THREE.MeshStandardMaterial({ color: 0xff6600, roughness: 0.6 }));
+      cone.position.set(side * (this.halfW + 0.5), 0.1, mz);
+      this.group.add(cone);
+    }
+  }
+
+  // No finish — game ends when timer runs out
+};
+
+Track.prototype._constrainTimeAttack = function(x, z, vx, vz) {
+  var ox = Math.max(-this.halfW + 0.3, Math.min(this.halfW - 0.3, x));
+  var ovx = vx, ovz = vz;
+  if (Math.abs(x) > this.halfW - 0.3 && (x > 0 ? vx > 0 : vx < 0))
+    ovx = 0;
+  return { x: ox, z: z, vx: ovx, vz: ovz };
+};
+
+Track.prototype._getTimeAttackPos = function() {
+  return { x: 0, z: -989, hdg: Math.PI };
+};
+
 // ====== URBAN ======
 Track.prototype._buildUrban = function(scene) {
   this.bound = 25; // half-size of the city area
@@ -1924,6 +2003,7 @@ Track.prototype._getUrbanPos = function() {
 Track.prototype.constrain = function(x, z, vx, vz) {
   if (this.type === 'drag') return this._constrainDrag(x, z, vx, vz);
   if (this.type === 'urban') return this._constrainUrban(x, z, vx, vz);
+  if (this.type === 'timeattack') return this._constrainTimeAttack(x, z, vx, vz);
   return this._constrainCircuit(x, z, vx, vz);
 };
 
@@ -2015,6 +2095,7 @@ Track.prototype._constrainUrban = function(x, z, vx, vz) {
 Track.prototype.getStart = function() {
   if (this.type === 'drag') return this._getDragPos();
   if (this.type === 'urban') return this._getUrbanPos();
+  if (this.type === 'timeattack') return this._getTimeAttackPos();
   return this._getCircuitPos();
 };
 
@@ -2408,12 +2489,13 @@ function showHUD() {
   hudP2.style.display = showP2 ? 'flex' : 'none';
   var dv = document.getElementById('hudDivider');
   var isPolice = track && track.type === 'urban';
+  var isTimed = track && (track.type === 'urban' || track.type === 'timeattack');
   if (dv) {
     dv.style.display = showP2 ? 'block' : 'none';
-    if (centerTimer) centerTimer.style.display = isPolice && showP2 ? 'block' : 'none';
+    if (centerTimer) centerTimer.style.display = isTimed && showP2 ? 'block' : 'none';
   }
-  // Hide time labels for non-police tracks
-  if (p1TimeEl) p1TimeEl.parentElement.style.display = (isPolice && !showP2) ? 'block' : 'none';
+  // Hide time labels for non-timed tracks
+  if (p1TimeEl) p1TimeEl.parentElement.style.display = (isTimed && !showP2) ? 'block' : 'none';
   if (p2TimeEl) p2TimeEl.parentElement.style.display = 'none';
 }
 function showPlayerFinish(pi) {
@@ -2464,8 +2546,8 @@ function updHUD(p, spd, score, active, combo, timePct) {
   if (!finished[p] && active) { drfEl.classList.add('active'); drfEl.textContent = 'DRIFT x' + combo; }
   else { drfEl.classList.remove('active'); }
   var timeEl = p === 0 ? p1TimeEl : p2TimeEl;
-  var isPolice = track && track.type === 'urban';
-  if (isPolice) {
+  var isTimed = track && (track.type === 'urban' || track.type === 'timeattack');
+  if (isTimed) {
     var remain = Math.ceil(gameTime);
     if (playerCount === 1 && timeEl) { timeEl.textContent = remain + 's'; }
     if (centerTimer) {
