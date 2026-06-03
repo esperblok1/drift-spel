@@ -535,17 +535,32 @@ Car.prototype._build = function() {
     addLayer(swPts, 0.01, gm, 0.26, 0, s * 0.385);
   }
 
-  // REAR WING (optional)
+  // REAR WING (optional) — improved aero design
   if (c.spoiler !== false) {
+    // Main wing: aerodynamic profile (teardrop cross-section)
     var wingPts = [
-      [-0.42, -0.07], [-0.42, 0.07], [0.42, 0.07], [0.42, -0.07]
+      [-0.38, -0.05],  // left trailing edge
+      [-0.34, 0.01],   // left mid
+      [-0.26, 0.05],   // left thick
+      [-0.14, 0.07],   // left leading curve
+      [0, 0.08],       // center leading edge
+      [0.14, 0.07],    // right leading curve
+      [0.26, 0.05],    // right thick
+      [0.34, 0.01],    // right mid
+      [0.38, -0.05],   // right trailing edge
     ];
-    addLayer(wingPts, 0.02, bm, 0.54, 1.06);
+    addLayer(wingPts, 0.05, bm, 0.54, 1.08);
 
-    // Wing pedestals
+    // End plates
     for (var s = -1; s <= 1; s += 2) {
-      var pedPts = [[-0.025, -0.02], [-0.025, 0.10], [0.025, 0.10], [0.025, -0.02]];
-      addLayer(pedPts, 0.42, dm, 0.52, 1.06, s * 0.30);
+      var epPts = [[-0.004, -0.05], [-0.004, 0.08], [0.004, 0.08], [0.004, -0.05]];
+      addLayer(epPts, 0.06, bm, 0.48, 1.08, s * 0.38);
+    }
+
+    // Wing pedestals (wider stance)
+    for (var s = -1; s <= 1; s += 2) {
+      var pedPts = [[-0.03, -0.02], [-0.03, 0.12], [0.03, 0.12], [0.03, -0.02]];
+      addLayer(pedPts, 0.40, dm, 0.52, 1.08, s * 0.24);
     }
   }
 
