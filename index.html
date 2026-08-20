@@ -87,6 +87,25 @@ canvas{display:block}
 .pause-btns{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
 .pause-btns .btn{font-size:14px;padding:10px 30px;min-width:140px}
 .trk-stat{font-size:11px;color:#888;margin-top:4px;line-height:1.3}
+#loadingScreen{display:none;position:absolute;inset:0;background:radial-gradient(ellipse at center,#111 0%,#000 100%);z-index:20;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.ldr-title{font-size:48px;font-weight:bold;background:linear-gradient(135deg,#ff6b35,#ff2d55);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:6px;text-shadow:0 0 40px rgba(255,45,85,0.3)}
+.ldr-scene{position:relative;width:260px;height:100px;margin:10px 0}
+.ldr-car{position:absolute;bottom:20px;left:50%;transform:translateX(-50%) rotate(-6deg);width:120px;height:36px;background:linear-gradient(180deg,#eee 0%,#bbb 100%);border-radius:8px 8px 4px 4px;box-shadow:0 4px 20px rgba(255,255,255,0.15);animation:carSwing 1.8s ease-in-out infinite}
+.ldr-car::before{content:'';position:absolute;top:-16px;left:18px;width:70px;height:18px;background:linear-gradient(180deg,#99ccff 0%,#6699cc 100%);border-radius:6px 12px 0 0;clip-path:polygon(10% 100%,0% 0%,100% 0%,90% 100%);opacity:0.8}
+.ldr-car::after{content:'';position:absolute;bottom:-4px;left:12px;width:20px;height:20px;background:radial-gradient(circle,#555 40%,#222 60%,#111 100%);border-radius:50%;box-shadow:76px 0 0 0 #555,76px 0 0 4px #222;animation:wheelSpin 0.3s linear infinite}
+.ldr-smoke{position:absolute;bottom:14px;width:16px;height:16px;background:radial-gradient(circle,rgba(200,200,200,0.6) 0%,transparent 70%);border-radius:50%;animation:smokeRise 1.2s ease-out infinite}
+.ldr-smoke.s1{left:38px;animation-delay:0s}
+.ldr-smoke.s2{left:28px;animation-delay:0.4s}
+.ldr-smoke.s3{left:48px;animation-delay:0.8s}
+.ldr-road{width:260px;height:3px;background:repeating-linear-gradient(90deg,#555 0px,#555 8px,transparent 8px,transparent 16px);border-radius:2px;animation:roadScroll 0.5s linear infinite}
+.ldr-bar{width:220px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden}
+.ldr-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff6b35,#ff2d55);border-radius:3px;transition:width 0.1s ease}
+.ldr-text{color:#888;font-size:13px;letter-spacing:3px;animation:pulse 1.2s ease-in-out infinite}
+@keyframes carSwing{0%,100%{transform:translateX(-50%) rotate(-6deg) translateY(0)}50%{transform:translateX(-50%) rotate(-3deg) translateY(-3px)}}
+@keyframes wheelSpin{from{box-shadow:12px 0 0 0 #555,12px 0 0 4px #222,76px 0 0 0 #555,76px 0 0 4px #222}to{box-shadow:12px 0 0 0 #555,12px 0 0 4px #222,76px 0 0 0 #555,76px 0 0 4px #222}}
+@keyframes smokeRise{0%{opacity:0.7;transform:scale(1) translate(0,0)}100%{opacity:0;transform:scale(2.5) translate(-20px,-15px)}}
+@keyframes roadScroll{from{background-position:0 0}to{background-position:-16px 0}}
+@keyframes pulse{0%,100%{opacity:0.5}50%{opacity:1}}
 
 </style>
 </head>
@@ -156,6 +175,18 @@ canvas{display:block}
     <button class="btn" id="restartBtn">OPNIEUW</button>
   </div>
   <div id="countdown"><div class="num" id="cdNum">3</div></div>
+  <div id="loadingScreen">
+    <div class="ldr-title">DRIFT SPEL</div>
+    <div class="ldr-scene">
+      <div class="ldr-car"></div>
+      <div class="ldr-smoke s1"></div>
+      <div class="ldr-smoke s2"></div>
+      <div class="ldr-smoke s3"></div>
+    </div>
+    <div class="ldr-road"></div>
+    <div class="ldr-bar"><div class="ldr-fill" id="ldrFill"></div></div>
+    <div class="ldr-text">Laden...</div>
+  </div>
   <div id="pauseP1" class="pause-half">
     <div class="pause-half-inner">
       <h1>GEPAUZEERD</h1>
@@ -2294,6 +2325,7 @@ function showMenu() {
   menu.style.display = 'flex'; hudP1.style.display = 'none'; hudP2.style.display = 'none';
   gameOver.style.display = 'none'; countdown.style.display = 'none';
   goHalf1.style.display = 'none'; goHalf2.style.display = 'none'; pauseP1.style.display = 'none'; pauseP2.style.display = 'none'; pauseBtn1.style.display = 'none'; pauseBtn2.style.display = 'none';
+  loadingScreen.style.display = 'none';
   if (centerTimer) centerTimer.style.display = 'none';
 }
 function showHUD() {
@@ -2494,7 +2526,24 @@ var state = 'menu';
 var cdCount = 3;
 var cdTimer = 0;
 
-startBtn.addEventListener('click', function() { startGame(); });
+var loadingScreen = document.getElementById('loadingScreen');
+var ldrFill = document.getElementById('ldrFill');
+startBtn.addEventListener('click', function() {
+  loadingScreen.style.display = 'flex';
+  ldrFill.style.width = '0%';
+  var pct = 0;
+  var iv = setInterval(function() {
+    pct += Math.random() * 18 + 5;
+    if (pct >= 100) {
+      pct = 100; clearInterval(iv);
+      setTimeout(function() {
+        loadingScreen.style.display = 'none';
+        startGame();
+      }, 350);
+    }
+    ldrFill.style.width = pct + '%';
+  }, 70);
+});
 restartBtn.addEventListener('click', function() {
   BGM.stop();
   state = 'menu'; renderMenu(); showMenu();
